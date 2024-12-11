@@ -1,0 +1,43 @@
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+http_archive(
+    name = "rules_rust",
+    integrity = "sha256-r09Wyq5QqZpov845sUG1Cd1oVIyCBLmKt6HK/JTVuwI=",
+    urls = ["https://github.com/bazelbuild/rules_rust/releases/download/0.54.1/rules_rust-v0.54.1.tar.gz"],
+)
+
+load("@rules_rust//rust:repositories.bzl", "rules_rust_dependencies", "rust_register_toolchains")
+
+rules_rust_dependencies()
+
+rust_register_toolchains()
+
+load("@rules_rust//crate_universe:repositories.bzl", "crate_universe_dependencies")
+
+crate_universe_dependencies()
+
+load("@rules_rust//crate_universe:defs.bzl", "crate", "crates_repository")
+
+crates_repository(
+    name = "crates",
+    cargo_lockfile = "//:Cargo.lock",
+    lockfile = "//:Cargo.Bazel.lock.json",
+    manifests = [
+        "//:Cargo.toml",
+    ],
+    annotations = {
+        "openssl-sys": [
+            crate.annotation(
+                build_script_data = ["@openssl//:gen_dir"],
+                build_script_env = {
+                    "OPENSSL_DIR": "$(execpath @openssl//:gen_dir)",
+                    "OPENSSL_STATIC": "1",
+                }
+            )
+        ]
+    }
+)
+
+load("@crates//:defs.bzl", "crate_repositories")
+
+crate_repositories()
