@@ -1,1 +1,23 @@
 bazel_dep(name = "openssl", version = "3.3.1.bcr.1")
+bazel_dep(name = "rules_rust", version = "0.61.0")
+
+crate = use_extension(
+    "@rules_rust//crate_universe:extension.bzl",
+    "crate",
+)
+crate.annotation(
+    build_script_data = ["@openssl//:gen_dir"],
+    build_script_env = {
+        "OPENSSL_DIR": "$(execpath @openssl//:gen_dir)",
+        "OPENSSL_STATIC": "1",
+    },
+    crate = "openssl-sys",
+    repositories = ["crates"],
+)
+crate.from_cargo(
+    cargo_lockfile = "//:Cargo.lock",
+    manifests = ["//:Cargo.toml"],
+)
+use_repo(crate, "crates")
+
+inject_repo(crate, "openssl")
